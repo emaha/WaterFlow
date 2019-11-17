@@ -1,22 +1,47 @@
 ﻿using System;
 using SFML.Graphics;
+using SFML.System;
 using SFML.Window;
 
 namespace WaterFlow
 {
     internal class Program
     {
-        private const int Width = 50;
-        private const int Height = 25;
+        private const int Width = 120;
+        private const int Height = 80;
+        private const int CellWidth = 10;
+        private const int CellHeight = 10;
         private static bool isExit = false;
+        private static Cell[,] map = new Cell[Width, Height];
+        private static RectangleShape[,] shapes = new RectangleShape[Width, Height];
 
         private static void Main(string[] args)
         {
-            /*
+            for(int y = 0; y < Height; y++)
+            {
+                for(int x = 0; x < Width; x++)
+                {
+                    shapes[x, y] = new RectangleShape(new Vector2f(CellWidth, CellHeight));
+                    shapes[x,y].Position = new Vector2f(x * CellHeight, y * CellHeight);
+                }
+            }
+
+
+            Clock clock = new Clock();
+            Time UPS = Time.FromSeconds(1 / 60.0f);
+            Time accum = Time.Zero;
+
             RenderWindow window = new RenderWindow(new VideoMode(1200, 800), "Solar");
             window.Closed += OnClose;
             window.KeyPressed += OnKeyPressed;
             window.SetActive();
+
+            
+            Init(map);
+            map[23, 23].Preasure = 50000;
+            map[24, 23].Preasure = 5;
+            map[25, 23].Preasure = 10;
+            int timer = 0;
 
             while (window.IsOpen && !isExit)
             {
@@ -27,35 +52,18 @@ namespace WaterFlow
                 {
                     accum -= UPS;
                     HandleKeyboard();
-                    //Offset = Earth.Position / Scale - new Vector2f(600, 400);
-                    manager.Update();
-                    //Console.WriteLine(Earth.Position + " " + Offset);
+                   
+                    
+                    
+                    CalculateMap(map);
                 }
 
-                manager.Draw(window);
+                Draw(window, map);
+
                 accum += clock.Restart();
                 window.Display();
             }
-            */
 
-            Cell[,] map = new Cell[Width, Height];
-            Init(map);
-            map[23, 23].Preasure = 50000;
-            map[24, 23].Preasure = 5;
-            map[25, 23].Preasure = 10;
-            int timer = 0;
-
-            while (true)
-            {
-                Draw(map);
-                Console.ReadKey();
-                for (int i = 0; i < 1; i++)
-                {
-                    CalculateMap(map);
-                    timer++;
-                }
-                if (timer % 10 == 0) map[23, 1].Preasure = timer;
-            }
         }
 
         private static void Init(Cell[,] map)
@@ -132,9 +140,9 @@ namespace WaterFlow
                         map[x, y].Preasure <= 0) continue;
 
                     float diff = map[x, y].Preasure - map[x + dx, y + dy].Preasure;
-                    if (dy == -1 && diff > 5f ||    // гравитация(сила не дающая распространяться вверх или плотность слоев)
-                        dy == 0 && diff > 0.01f ||  // текучесть(в стороны)
-                        dy == 1 && diff > -10f)    // сила выталкивания (чем глубже, тем сильнее давление), способность более высокого слоя проникать в нижний
+                    if (dy == -1 && diff > 500f ||    // гравитация(сила не дающая распространяться вверх или плотность слоев)
+                        dy == 0 && diff > 1f ||  // текучесть(в стороны)
+                        dy == 1 && diff > -1000f)    // сила выталкивания (чем глубже, тем сильнее давление), способность более высокого слоя проникать в нижний
                     {
                         map[x + dx, y + dy].PreCalcPreasure += Math.Abs(diff / cnt);
                         map[x, y].PreCalcPreasure -= Math.Abs(diff / cnt);
@@ -143,17 +151,21 @@ namespace WaterFlow
             }
         }
 
-        private static void Draw(Cell[,] map)
+        private static void Draw(RenderTarget target, Cell[,] map)
         {
-            Console.Clear();
+            target.Clear();
             for (int y = 0; y < Height; y++)
             {
                 for (int x = 0; x < Width; x++)
                 {
-                    Console.Write(Math.Ceiling(map[x, y].Preasure) + (map[x, y].Preasure > 9.0f ? "" : " "));
-                    //Console.Write(map[x, y].Preasure);
+                    
+                    int pres = (byte)(map[x, y].Preasure);
+                    if (pres > 255) pres = 255;
+
+                    shapes[x,y].FillColor = new Color(20, 20, (byte) pres);
+
+                    target.Draw(shapes[x,y]);
                 }
-                Console.WriteLine();
             }
         }
 
@@ -167,6 +179,7 @@ namespace WaterFlow
             if (Keyboard.IsKeyPressed(Keyboard.Key.S)) { }
             if (Keyboard.IsKeyPressed(Keyboard.Key.Q)) { }
             if (Keyboard.IsKeyPressed(Keyboard.Key.E)) { }
+            if (Keyboard.IsKeyPressed(Keyboard.Key.Space)) { map[60, 5].Preasure = 50000f; }
         }
 
         private static void OnKeyPressed(object sender, KeyEventArgs e)
