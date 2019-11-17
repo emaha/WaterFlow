@@ -153,7 +153,7 @@ namespace WaterFlow
 
         private static void Draw(RenderTarget target, Cell[,] map)
         {
-            target.Clear();
+            //target.Clear();
             for (int y = 0; y < Height; y++)
             {
                 for (int x = 0; x < Width; x++)
