@@ -14,6 +14,15 @@ namespace WaterFlow
         private static bool isExit = false;
         private static Cell[,] map = new Cell[Width, Height];
         private static RectangleShape[,] shapes = new RectangleShape[Width, Height];
+        
+        // Гравитация
+        private static float Gravity = 1f;
+
+        // Текучесть
+        private static float Fluent = 1f;
+
+        // Выталкиваюшая сила
+        private static float ArchForce = -1f;
 
         private static void Main(string[] args)
         {
@@ -111,7 +120,7 @@ namespace WaterFlow
 
         private static void CalculateCell(Cell[,] map, int x, int y)
         {
-            if (map[x, y].Preasure < 0.85f && !map[x, y + 1].isStatic)
+            if (map[x, y].Preasure < 50f && !map[x, y + 1].isStatic)
             {
                 map[x, y + 1].PreCalcPreasure += map[x, y].Preasure;
                 map[x, y].Preasure = 0;
@@ -140,9 +149,9 @@ namespace WaterFlow
                         map[x, y].Preasure <= 0) continue;
 
                     float diff = map[x, y].Preasure - map[x + dx, y + dy].Preasure;
-                    if (dy == -1 && diff > 500f ||    // гравитация(сила не дающая распространяться вверх или плотность слоев)
-                        dy == 0 && diff > 1f ||  // текучесть(в стороны)
-                        dy == 1 && diff > -1000f)    // сила выталкивания (чем глубже, тем сильнее давление), способность более высокого слоя проникать в нижний
+                    if (dy == -1 && diff > Gravity ||    // гравитация(сила не дающая распространяться вверх или плотность слоев)
+                        dy == 0 && diff > Fluent ||  // текучесть(в стороны)
+                        dy == 1 && diff > ArchForce)    // сила выталкивания (чем глубже, тем сильнее давление), способность более высокого слоя проникать в нижний
                     {
                         map[x + dx, y + dy].PreCalcPreasure += Math.Abs(diff / cnt);
                         map[x, y].PreCalcPreasure -= Math.Abs(diff / cnt);
@@ -159,10 +168,10 @@ namespace WaterFlow
                 for (int x = 0; x < Width; x++)
                 {
                     
-                    int pres = (byte)(map[x, y].Preasure);
+                    int pres = (byte)(map[x, y].Preasure*5 + 20);
                     if (pres > 255) pres = 255;
 
-                    shapes[x,y].FillColor = new Color(20, 20, (byte) pres);
+                    shapes[x,y].FillColor = new Color(0, 0, (byte) pres);
 
                     target.Draw(shapes[x,y]);
                 }
@@ -173,12 +182,12 @@ namespace WaterFlow
         {
             float scrollSpeed = 20f;
 
-            if (Keyboard.IsKeyPressed(Keyboard.Key.A)) { }
-            if (Keyboard.IsKeyPressed(Keyboard.Key.D)) { }
-            if (Keyboard.IsKeyPressed(Keyboard.Key.W)) { }
-            if (Keyboard.IsKeyPressed(Keyboard.Key.S)) { }
-            if (Keyboard.IsKeyPressed(Keyboard.Key.Q)) { }
-            if (Keyboard.IsKeyPressed(Keyboard.Key.E)) { }
+            if (Keyboard.IsKeyPressed(Keyboard.Key.Q)) { Gravity += 50f; Console.WriteLine($"Gravity: {Gravity}"); }
+            if (Keyboard.IsKeyPressed(Keyboard.Key.A)) { Gravity -= 50f; Console.WriteLine($"Gravity: {Gravity}"); }
+            if (Keyboard.IsKeyPressed(Keyboard.Key.W)) { Fluent += 50f; Console.WriteLine($"Fluent: {Fluent}"); }
+            if (Keyboard.IsKeyPressed(Keyboard.Key.S)) { Fluent -= 50f; Console.WriteLine($"Fluent: {Fluent}"); }
+            if (Keyboard.IsKeyPressed(Keyboard.Key.E)) { ArchForce += 50f; Console.WriteLine($"ArchForce: {ArchForce}"); }
+            if (Keyboard.IsKeyPressed(Keyboard.Key.D)) { ArchForce -= 50f; Console.WriteLine($"ArchForce: {ArchForce}"); }
             if (Keyboard.IsKeyPressed(Keyboard.Key.Space)) { map[60, 5].Preasure = 50000f; }
         }
 
