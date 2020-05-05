@@ -24,6 +24,7 @@ namespace WaterFlow
             window.KeyPressed += OnKeyPressed;
             window.SetActive();
 
+            int timer = 0;
             while (window.IsOpen && !isExit)
             {
                 window.Clear();
@@ -42,7 +43,6 @@ namespace WaterFlow
                 accum += clock.Restart();
                 window.Display();
             }
-
         }
 
         public static void HandleKeyboard()
